@@ -1,9 +1,30 @@
+/*
+ * Copyright 2005-2007 Russ Cox, Massachusetts Institute of Technology
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+
 #include "taskimpl.h"
 #include <sys/poll.h>
 #include <fcntl.h>
 
-enum
-{
+enum {
 	MAXFD = 1024
 };
 
@@ -16,55 +37,57 @@ static int sleepingcounted;
 static uvlong nsec(void);
 
 void
-fdtask(void *v)
+fdtask(TASK_UNUSED void *v)
 {
 	int i, ms;
 	Task *t;
 	uvlong now;
-	
 	tasksystem();
 	taskname("fdtask");
-	for(;;){
+	for (;;) {
 		/* let everyone else run */
-		while(taskyield() > 0)
-			;
+		while (taskyield() > 0) {
+			/* do nothing */
+		}
 		/* we're the only one runnable - poll for i/o */
 		errno = 0;
 		taskstate("poll");
-		if((t=sleeping.head) == nil)
+		if ((t = sleeping.head) == nil) {
 			ms = -1;
-		else{
+		} else {
 			/* sleep at most 5s */
 			now = nsec();
-			if(now >= t->alarmtime)
+			if (now >= t->alarmtime) {
 				ms = 0;
-			else if(now+5*1000*1000*1000LL >= t->alarmtime)
-				ms = (t->alarmtime - now)/1000000;
-			else
+			} else if (now + 5 * 1000 * 1000 * 1000LL >=
+				   t->alarmtime) {
+				ms = (t->alarmtime - now) / 1000000;
+			} else {
 				ms = 5000;
+			}
 		}
-		if(poll(pollfd, npollfd, ms) < 0){
-			if(errno == EINTR)
+		if (poll(pollfd, npollfd, ms) < 0){
+			if (errno == EINTR) {
 				continue;
+			}
 			fprint(2, "poll: %s\n", strerror(errno));
 			taskexitall(0);
 		}
-
 		/* wake up the guys who deserve it */
-		for(i=0; i<npollfd; i++){
-			while(i < npollfd && pollfd[i].revents){
+		for (i=0; i<npollfd; i++) {
+			while (i < npollfd && pollfd[i].revents) {
 				taskready(polltask[i]);
 				--npollfd;
 				pollfd[i] = pollfd[npollfd];
 				polltask[i] = polltask[npollfd];
 			}
 		}
-		
 		now = nsec();
-		while((t=sleeping.head) && now >= t->alarmtime){
+		while ((t=sleeping.head) && now >= t->alarmtime) {
 			deltask(&sleeping, t);
-			if(!t->system && --sleepingcounted == 0)
+			if (!t->system && --sleepingcounted == 0) {
 				taskcount--;
+			}
 			taskready(t);
 		}
 	}
@@ -75,61 +98,58 @@ taskdelay(uint ms)
 {
 	uvlong when, now;
 	Task *t;
-	
-	if(!startedfdtask){
+	if (!startedfdtask) {
 		startedfdtask = 1;
 		taskcreate(fdtask, 0, 32768);
 	}
-
 	now = nsec();
-	when = now+(uvlong)ms*1000000;
-	for(t=sleeping.head; t!=nil && t->alarmtime < when; t=t->next)
-		;
-
-	if(t){
+	when = now + (uvlong)ms * 1000000;
+	for (t = sleeping.head; t != nil && t->alarmtime < when; t = t->next) {
+		/* do nothing */
+	}
+	if (t) {
 		taskrunning->prev = t->prev;
 		taskrunning->next = t;
-	}else{
+	} else {
 		taskrunning->prev = sleeping.tail;
 		taskrunning->next = nil;
 	}
-	
 	t = taskrunning;
 	t->alarmtime = when;
-	if(t->prev)
+	if (t->prev) {
 		t->prev->next = t;
-	else
+	} else {
 		sleeping.head = t;
-	if(t->next)
+	}
+	if (t->next) {
 		t->next->prev = t;
-	else
+	} else {
 		sleeping.tail = t;
-
-	if(!t->system && sleepingcounted++ == 0)
+	}
+	if (!t->system && sleepingcounted++ == 0) {
 		taskcount++;
+	}
 	taskswitch();
-
-	return (nsec() - now)/1000000;
+	return (nsec() - now) / 1000000;
 }
 
 void
 fdwait(int fd, int rw)
 {
 	int bits;
-
-	if(!startedfdtask){
+	if (!startedfdtask) {
 		startedfdtask = 1;
 		taskcreate(fdtask, 0, 32768);
 	}
-
-	if(npollfd >= MAXFD){
+	if (npollfd >= MAXFD) {
 		fprint(2, "too many poll file descriptors\n");
 		abort();
 	}
-	
-	taskstate("fdwait for %s", rw=='r' ? "read" : rw=='w' ? "write" : "error");
+	taskstate("fdwait for %s", rw == 'r' ? "read"
+					     : rw == 'w' ? "write"
+							 : "error");
 	bits = 0;
-	switch(rw){
+	switch (rw) {
 	case 'r':
 		bits |= POLLIN;
 		break;
@@ -137,7 +157,6 @@ fdwait(int fd, int rw)
 		bits |= POLLOUT;
 		break;
 	}
-
 	polltask[npollfd] = taskrunning;
 	pollfd[npollfd].fd = fd;
 	pollfd[npollfd].events = bits;
@@ -151,10 +170,9 @@ int
 fdread1(int fd, void *buf, int n)
 {
 	int m;
-	
-	do
+	do {
 		fdwait(fd, 'r');
-	while((m = read(fd, buf, n)) < 0 && errno == EAGAIN);
+	} while ((m = read(fd, buf, n)) < 0 && errno == EAGAIN);
 	return m;
 }
 
@@ -162,9 +180,9 @@ int
 fdread(int fd, void *buf, int n)
 {
 	int m;
-	
-	while((m=read(fd, buf, n)) < 0 && errno == EAGAIN)
+	while ((m = read(fd, buf, n)) < 0 && errno == EAGAIN) {
 		fdwait(fd, 'r');
+	}
 	return m;
 }
 
@@ -172,14 +190,17 @@ int
 fdwrite(int fd, void *buf, int n)
 {
 	int m, tot;
-	
-	for(tot=0; tot<n; tot+=m){
-		while((m=write(fd, (char*)buf+tot, n-tot)) < 0 && errno == EAGAIN)
+	for (tot = 0; tot < n; tot += m) {
+		while ((m = write(fd, (char *)buf + tot, n - tot)) < 0 &&
+		       errno == EAGAIN) {
 			fdwait(fd, 'w');
-		if(m < 0)
+		}
+		if (m < 0) {
 			return m;
-		if(m == 0)
+		}
+		if (m == 0) {
 			break;
+		}
 	}
 	return tot;
 }
@@ -187,16 +208,15 @@ fdwrite(int fd, void *buf, int n)
 int
 fdnoblock(int fd)
 {
-	return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL)|O_NONBLOCK);
+	return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
 }
 
 static uvlong
 nsec(void)
 {
 	struct timeval tv;
-
-	if(gettimeofday(&tv, 0) < 0)
+	if (gettimeofday(&tv, 0) < 0) {
 		return -1;
-	return (uvlong)tv.tv_sec*1000*1000*1000 + tv.tv_usec*1000;
+	}
+	return (uvlong)tv.tv_sec * 1000 * 1000 * 1000 + tv.tv_usec * 1000;
 }
-

@@ -1,61 +1,84 @@
-/* Copyright (c) 2004 Russ Cox.  See COPYRIGHT. */
-
-#include "taskimpl.h"
-#include <stdio.h>	/* for strerror! */
-
 /*
- * Stripped down print library.  Plan 9 interface, new code.
+ * Copyright 2005-2007 Russ Cox, Massachusetts Institute of Technology
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
-enum
-{
-	FlagLong = 1<<0,
-	FlagLongLong = 1<<1,
-	FlagUnsigned = 1<<2,
+#include "taskimpl.h"
+#include <stdio.h> /* for strerror */
+
+/*
+ * Stripped down print library. Plan 9 interface, new code.
+ */
+
+enum {
+	FlagLong = 1 << 0,
+	FlagLongLong = 1 << 1,
+	FlagUnsigned = 1 << 2,
 };
 
-static char*
+static char *
 printstr(char *dst, char *edst, char *s, int size)
 {
 	int l, n, sign;
-
 	sign = 1;
-	if(size < 0){
+	if (size < 0) {
 		size = -size;
 		sign = -1;
 	}
-	if(dst >= edst)
+	if (dst >= edst) {
 		return dst;
+	}
 	l = strlen(s);
 	n = l;
-	if(n < size)
+	if (n < size) {
 		n = size;
-	if(n >= edst-dst)
+	}
+	if (n >= edst-dst) {
 		n = (edst-dst)-1;
-	if(l > n)
+	}
+	if (l > n) {
 		l = n;
-	if(sign < 0){
+	}
+	if (sign < 0) {
 		memmove(dst, s, l);
-		if(n-l)
+		if (n-l) {
 			memset(dst+l, ' ', n-l);
-	}else{
-		if(n-l)
+		}
+	} else {
+		if (n-l) {
 			memset(dst, ' ', n-l);
+		}
 		memmove(dst+n-l, s, l);
 	}
-	return dst+n;
+	return dst + n;
 }
-	
-char*
+
+char *
 vseprint(char *dst, char *edst, char *fmt, va_list arg)
 {
 	int fl, size, sign, base;
 	char *p, *w;
 	char cbuf[2];
-
 	w = dst;
-	for(p=fmt; *p && w<edst-1; p++){
-		switch(*p){
+	for (p = fmt; *p && w < edst - 1; p++) {
+		switch (*p) {
 		default:
 			*w++ = *p;
 			break;
@@ -63,8 +86,8 @@ vseprint(char *dst, char *edst, char *fmt, va_list arg)
 			fl = 0;
 			size = 0;
 			sign = 1;
-			for(p++; *p; p++){
-				switch(*p){
+			for (p++; *p; p++) {
+				switch (*p) {
 				case '-':
 					sign = -1;
 					break;
@@ -78,13 +101,14 @@ vseprint(char *dst, char *edst, char *fmt, va_list arg)
 				case '7':
 				case '8':
 				case '9':
-					size = size*10 + *p-'0';
+					size = size * 10 + *p - '0';
 					break;
 				case 'l':
-					if(fl&FlagLong)
+					if (fl & FlagLong) {
 						fl |= FlagLongLong;
-					else
+					} else {
 						fl |= FlagLong;
+					}
 					break;
 				case 'u':
 					fl |= FlagUnsigned;
@@ -99,103 +123,103 @@ vseprint(char *dst, char *edst, char *fmt, va_list arg)
 				case 'x':
 					base = 16;
 					goto num;
-				num:
-				{
-					static char digits[] = "0123456789abcdef";
+				num: {
+					static char digits[] =
+						"0123456789abcdef";
 					char buf[30], *p;
 					int neg, zero;
 					uvlong luv;
-				
-					if(fl&FlagLongLong){
-						if(fl&FlagUnsigned)
+					if (fl & FlagLongLong) {
+						if (fl & FlagUnsigned) {
 							luv = va_arg(arg, uvlong);
-						else
+						} else {
 							luv = va_arg(arg, vlong);
-					}else{
-						if(fl&FlagLong){
-							if(fl&FlagUnsigned)
+						}
+					} else {
+						if (fl & FlagLong) {
+							if (fl & FlagUnsigned) {
 								luv = va_arg(arg, ulong);
-							else
+							} else {
 								luv = va_arg(arg, long);
-						}else{
-							if(fl&FlagUnsigned)
+							}
+						} else {
+							if (fl&FlagUnsigned) {
 								luv = va_arg(arg, uint);
-							else
+							} else {
 								luv = va_arg(arg, int);
+							}
 						}
 					}
-				
-					p = buf+sizeof buf;
+					p = buf + sizeof buf;
 					neg = 0;
 					zero = 0;
-					if(!(fl&FlagUnsigned) && (vlong)luv < 0){
+					if (!(fl & FlagUnsigned) && (vlong)luv < 0) {
 						neg = 1;
 						luv = -luv;
 					}
-					if(luv == 0)
+					if (luv == 0) {
 						zero = 1;
+					}
 					*--p = 0;
-					while(luv){
-						*--p = digits[luv%base];
+					while (luv) {
+						*--p = digits[luv % base];
 						luv /= base;
 					}
-					if(base == 16){
+					if (base == 16){
 						*--p = 'x';
 						*--p = '0';
 					}
-					if(base == 8 || zero) 
+					if (base == 8 || zero) {
 						*--p = '0';
-					w = printstr(w, edst, p, size*sign);
+					}
+					w = printstr(w, edst, p, size * sign);
 					goto break2;
 				}
 				case 'c':
 					cbuf[0] = va_arg(arg, int);
 					cbuf[1] = 0;
-					w = printstr(w, edst, cbuf, size*sign);
+					w = printstr(w, edst, cbuf, size * sign);
 					goto break2;
 				case 's':
-					w = printstr(w, edst, va_arg(arg, char*), size*sign);
+					w = printstr(w, edst, va_arg(arg, char*), size * sign);
 					goto break2;
 				case 'r':
-					w = printstr(w, edst, strerror(errno), size*sign);
+					w = printstr(w, edst, strerror(errno), size * sign);
 					goto break2;
-				default:	
+				default:
 					p = "X*verb*";
 					goto break2;
 				}
 			}
-		    break2:
+break2:
 			break;
 		}
 	}
-	
 	assert(w < edst);
 	*w = 0;
 	return dst;
 }
 
-char*
+char *
 vsnprint(char *dst, uint n, char *fmt, va_list arg)
 {
 	return vseprint(dst, dst+n, fmt, arg);
 }
 
-char*
+char *
 snprint(char *dst, uint n, char *fmt, ...)
 {
 	va_list arg;
-
 	va_start(arg, fmt);
 	vsnprint(dst, n, fmt, arg);
 	va_end(arg);
 	return dst;
 }
 
-char*
+char *
 seprint(char *dst, char *edst, char *fmt, ...)
 {
 	va_list arg;
-
 	va_start(arg, fmt);
 	vseprint(dst, edst, fmt, arg);
 	va_end(arg);
@@ -206,7 +230,6 @@ int
 vfprint(int fd, char *fmt, va_list arg)
 {
 	char buf[256];
-
 	vseprint(buf, buf+sizeof buf, fmt, arg);
 	return write(fd, buf, strlen(buf));
 }
@@ -222,7 +245,6 @@ fprint(int fd, char *fmt, ...)
 {
 	int n;
 	va_list arg;
-
 	va_start(arg, fmt);
 	n = vfprint(fd, fmt, arg);
 	va_end(arg);
@@ -234,19 +256,15 @@ print(char *fmt, ...)
 {
 	int n;
 	va_list arg;
-
 	va_start(arg, fmt);
 	n = vprint(fmt, arg);
 	va_end(arg);
 	return n;
 }
 
-char*
+char *
 strecpy(char *dst, char *edst, char *src)
 {
 	*printstr(dst, edst, src, 0) = 0;
 	return dst;
 }
-
-
-

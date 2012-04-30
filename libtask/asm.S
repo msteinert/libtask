@@ -1,4 +1,24 @@
-/* Copyright (c) 2005-2006 Russ Cox, MIT; see COPYRIGHT */
+/*
+ * Copyright 2005-2007 Russ Cox, Massachusetts Institute of Technology
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
 
 #if defined(__FreeBSD__) && defined(__i386__) && __FreeBSD__ < 5
 #define NEEDX86CONTEXT 1
@@ -44,7 +64,6 @@
 .globl SET
 SET:
 	movl	4(%esp), %eax
-
 	movl	8(%eax), %fs
 	movl	12(%eax), %es
 	movl	16(%eax), %ds
@@ -55,16 +74,13 @@ SET:
 	movl	36(%eax), %ebx
 	movl	40(%eax), %edx
 	movl	44(%eax), %ecx
-
 	movl	72(%eax), %esp
-	pushl	60(%eax)	/* new %eip */
+	pushl	60(%eax) /* new %eip */
 	movl	48(%eax), %eax
 	ret
-
 .globl GET
 GET:
 	movl	4(%esp), %eax
-
 	movl	%fs, 8(%eax)
 	movl	%es, 12(%eax)
 	movl	%ds, 16(%eax)
@@ -73,16 +89,14 @@ GET:
 	movl	%esi, 24(%eax)
 	movl	%ebp, 28(%eax)
 	movl	%ebx, 36(%eax)
-	movl	%edx, 40(%eax)		 
+	movl	%edx, 40(%eax)
 	movl	%ecx, 44(%eax)
-
-	movl	$1, 48(%eax)	/* %eax */
-	movl	(%esp), %ecx	/* %eip */
+	movl	$1, 48(%eax) /* %eax */
+	movl	(%esp), %ecx /* %eip */
 	movl	%ecx, 60(%eax)
-	leal	4(%esp), %ecx	/* %esp */
+	leal	4(%esp), %ecx /* %esp */
 	movl	%ecx, 72(%eax)
-
-	movl	44(%eax), %ecx	/* restore %ecx */
+	movl	44(%eax), %ecx /* restore %ecx */
 	movl	$0, %eax
 	ret
 #endif
@@ -105,10 +119,9 @@ SET:
 	movq	112(%rdi), %r14
 	movq	120(%rdi), %r15
 	movq	184(%rdi), %rsp
-	pushq	160(%rdi)	/* new %eip */
+	pushq	160(%rdi) /* new %eip */
 	movq	8(%rdi), %rdi
 	ret
-
 .globl GET
 GET:
 	movq	%rdi, 8(%rdi)
@@ -117,7 +130,7 @@ GET:
 	movq	%rcx, 32(%rdi)
 	movq	%r8, 40(%rdi)
 	movq	%r9, 48(%rdi)
-	movq	$1, 56(%rdi)	/* %rax */
+	movq	$1, 56(%rdi) /* %rax */
 	movq	%rbx, 64(%rdi)
 	movq	%rbp, 72(%rdi)
 	movq	%r10, 80(%rdi)
@@ -126,13 +139,11 @@ GET:
 	movq	%r13, 104(%rdi)
 	movq	%r14, 112(%rdi)
 	movq	%r15, 120(%rdi)
-
-	movq	(%rsp), %rcx	/* %rip */
+	movq	(%rsp), %rcx /* %rip */
 	movq	%rcx, 160(%rdi)
-	leaq	8(%rsp), %rcx	/* %rsp */
+	leaq	8(%rsp), %rcx /* %rsp */
 	movq	%rcx, 184(%rdi)
-
-	movq	32(%rdi), %rcx	/* restore %rcx */
+	movq	32(%rdi), %rcx /* restore %rcx */
 	movq	$0, %rax
 	ret
 #endif
@@ -140,12 +151,10 @@ GET:
 #ifdef NEEDPOWERCONTEXT
 /* get FPR and VR use flags with sc 0x7FF3 */
 /* get vsave with mfspr reg, 256 */
-
 .text
 .align 2
-
 .globl GET
-GET:				/* xxx: instruction scheduling */
+GET: /* XXX: instruction scheduling */
 	mflr	r0
 	mfcr	r5
 	mfctr	r6
@@ -157,11 +166,11 @@ GET:				/* xxx: instruction scheduling */
 
 	stw	r1, 4*4(r3)
 	stw	r2, 5*4(r3)
-	li	r5, 1			/* return value for setmcontext */
+	li	r5, 1 /* return value for setmcontext */
 	stw	r5, 6*4(r3)
 
-	stw	r13, (0+7)*4(r3)	/* callee-save GPRs */
-	stw	r14, (1+7)*4(r3)	/* xxx: block move */
+	stw	r13, (0+7)*4(r3) /* callee-save GPRs */
+	stw	r14, (1+7)*4(r3) /* xxx: block move */
 	stw	r15, (2+7)*4(r3)
 	stw	r16, (3+7)*4(r3)
 	stw	r17, (4+7)*4(r3)
@@ -180,13 +189,13 @@ GET:				/* xxx: instruction scheduling */
 	stw	r30, (17+7)*4(r3)
 	stw	r31, (18+7)*4(r3)
 
-	li	r3, 0			/* return */
+	li	r3, 0 /* return */
 	blr
 
 .globl SET
 SET:
-	lwz	r13, (0+7)*4(r3)	/* callee-save GPRs */
-	lwz	r14, (1+7)*4(r3)	/* xxx: block move */
+	lwz	r13, (0+7)*4(r3) /* callee-save GPRs */
+	lwz	r14, (1+7)*4(r3) /* xxx: block move */
 	lwz	r15, (2+7)*4(r3)
 	lwz	r16, (3+7)*4(r3)
 	lwz	r17, (4+7)*4(r3)
@@ -204,19 +213,16 @@ SET:
 	lwz	r29, (16+7)*4(r3)
 	lwz	r30, (17+7)*4(r3)
 	lwz	r31, (18+7)*4(r3)
-
 	lwz	r1, 4*4(r3)
 	lwz	r2, 5*4(r3)
-
 	lwz	r0, 0*4(r3)
 	mtlr	r0
 	lwz	r0, 1*4(r3)
-	mtcr	r0			/* mtcrf 0xFF, r0 */
+	mtcr	r0 /* mtcrf 0xFF, r0 */
 	lwz	r0, 2*4(r3)
 	mtctr	r0
 	lwz	r0, 3*4(r3)
 	mtxer	r0
-
 	lwz	r3,	6*4(r3)
 	blr
 #endif
@@ -244,7 +250,6 @@ GET:
 	/* return 0 */
 	mov	r0, #0
 	mov	pc, lr
-
 .globl SET
 SET:
 	ldr	r1, [r0,#4]
@@ -272,7 +277,6 @@ GET:
 	sw	$5, 28($4)
 	sw	$6, 32($4)
 	sw	$7, 36($4)
-
 	sw	$16, 72($4)
 	sw	$17, 76($4)
 	sw	$18, 80($4)
@@ -281,16 +285,13 @@ GET:
 	sw	$21, 92($4)
 	sw	$22, 96($4)
 	sw	$23, 100($4)
-
-	sw	$28, 120($4)	/* gp */
-	sw	$29, 124($4)	/* sp */
-	sw	$30, 128($4)	/* fp */
-	sw	$31, 132($4)	/* ra */
-
+	sw	$28, 120($4) /* gp */
+	sw	$29, 124($4) /* sp */
+	sw	$30, 128($4) /* fp */
+	sw	$31, 132($4) /* ra */
 	xor	$2, $2, $2
 	j	$31
 	nop
-
 .globl SET
 SET:
 	lw	$16, 72($4)
@@ -301,26 +302,21 @@ SET:
 	lw	$21, 92($4)
 	lw	$22, 96($4)
 	lw	$23, 100($4)
-
-	lw	$28, 120($4)	/* gp */
-	lw	$29, 124($4)	/* sp */
-	lw	$30, 128($4)	/* fp */
-	
-	/* 
-	 * If we set $31 directly and j $31, 
-	 * we would loose the outer return address.
+	lw	$28, 120($4) /* gp */
+	lw	$29, 124($4) /* sp */
+	lw	$30, 128($4) /* fp */
+	/*
+	 * If we set $31 directly and j $31,
+	 * we would lose the outer return address.
 	 * Use a temporary register, then.
 	 */
-	lw	$8, 132($4)		/* ra */
-		
-	/*  bug: not setting the pc causes a bus error */
-	lw	$25, 132($4)	/* pc */
-
+	lw	$8, 132($4) /* ra */
+	/* bug: not setting the pc causes a bus error */
+	lw	$25, 132($4) /* pc */
 	lw	$5, 28($4)
 	lw	$6, 32($4)
 	lw	$7, 36($4)
 	lw	$4, 24($4)
-
 	j	$8
 	nop
 #endif

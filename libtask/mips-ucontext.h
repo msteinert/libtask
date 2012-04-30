@@ -1,12 +1,5 @@
-typedef struct mcontext mcontext_t;
-typedef struct ucontext ucontext_t;
-
-extern	int		swapcontext(ucontext_t*, const ucontext_t*);
-extern	void	makecontext(ucontext_t*, void(*)(), int, ...);
-
 /*
- * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ * Copyright 1992, 1993 The Regents of the University of California.
  *
  * This code is derived from software contributed to Berkeley by
  * Ralph Campbell.
@@ -14,6 +7,7 @@ extern	void	makecontext(ucontext_t*, void(*)(), int, ...);
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -34,28 +28,29 @@ extern	void	makecontext(ucontext_t*, void(*)(), int, ...);
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	@(#)ucontext.h	8.1 (Berkeley) 6/10/93
- *	JNPR: ucontext.h,v 1.2 2007/08/09 11:23:32 katta
- * $FreeBSD: src/sys/mips/include/ucontext.h,v 1.2 2010/01/10 19:50:24 imp Exp $
  */
 
-struct	mcontext {
+typedef struct mcontext mcontext_t;
+typedef struct ucontext ucontext_t;
+extern int swapcontext(ucontext_t *, const ucontext_t *);
+extern void makecontext(ucontext_t *, void(*)(), int, ...);
+
+struct mcontext {
 	/*
-	 * These fields must match the corresponding fields in struct 
+	 * These fields must match the corresponding fields in struct
 	 * sigcontext which follow 'sc_mask'. That way we can support
 	 * struct sigcontext and ucontext_t at the same time.
 	 */
-	int		mc_onstack;		/* sigstack state to restore */
-	int		mc_pc;			/* pc at time of signal */
-	int		mc_regs[32];	/* processor regs 0 to 31 */
-    int		sr;             /* status register */
-    int		mullo, mulhi;	/* mullo and mulhi registers... */
-	int		mc_fpused;		/* fp has been used */
-	int		mc_fpregs[33];	/* fp regs 0 to 31 and csr */
-	int		mc_fpc_eir;		/* fp exception instruction reg */
-	void	*mc_tls;		/* pointer to TLS area */
-	int	__spare__[8];		/* XXX reserved */ 
+	int mc_onstack; /* sigstack state to restore */
+	int mc_pc; /* pc at time of signal */
+	int mc_regs[32]; /* processor regs 0 to 31 */
+	int sr; /* status register */
+	int mullo, mulhi; /* mullo and mulhi registers... */
+	int mc_fpused; /* fp has been used */
+	int mc_fpregs[33]; /* fp regs 0 to 31 and csr */
+	int mc_fpc_eir; /* fp exception instruction reg */
+	void *mc_tls; /* pointer to TLS area */
+	int __spare__[8]; /* XXX reserved */
 };
 
 struct ucontext {
@@ -67,11 +62,10 @@ struct ucontext {
 	 * support them both at the same time.
 	 * note: the union is not defined, though.
 	 */
-	sigset_t	uc_sigmask;
-	mcontext_t	uc_mcontext;
-
+	sigset_t uc_sigmask;
+	mcontext_t uc_mcontext;
 	struct __ucontext *uc_link;
-	stack_t		uc_stack;
-	int		uc_flags;
-	int		__spare__[4];
+	stack_t uc_stack;
+	int uc_flags;
+	int __spare__[4];
 };
