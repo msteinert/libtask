@@ -131,7 +131,7 @@ GET:
 	movq	%rcx, 160(%rdi)
 	leaq	8(%rsp), %rcx	/* %rsp */
 	movq	%rcx, 184(%rdi)
-	
+
 	movq	32(%rdi), %rcx	/* restore %rcx */
 	movq	$0, %rax
 	ret
