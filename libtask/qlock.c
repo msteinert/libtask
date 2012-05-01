@@ -103,11 +103,11 @@ canrlock(RWLock *l)
 static int
 _wlock(RWLock *l, int block)
 {
-	if(l->writer == nil && l->readers == 0){
+	if (l->writer == nil && l->readers == 0){
 		l->writer = taskrunning;
 		return 1;
 	}
-	if(!block) {
+	if (!block) {
 		return 0;
 	}
 	addtask(&l->wwaiting, taskrunning);

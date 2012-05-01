@@ -60,7 +60,7 @@ taskalloc(void (*fn)(void*), void *arg, uint stack)
 	/* allocate the task and stack together */
 	t = malloc(sizeof *t + stack);
 	if (t == nil) {
-		fprint(2, "taskalloc malloc: %r\n");
+		fprint(STDERR_FILENO, "taskalloc malloc: %r\n");
 		abort();
 	}
 	memset(t, 0, sizeof *t);
@@ -108,8 +108,9 @@ taskcreate(void (*fn)(void*), void *arg, uint stack)
 	t = taskalloc(fn, arg, stack);
 	taskcount++;
 	id = t->id;
-	if(nalltask % 64 == 0) {
-		alltask = realloc(alltask, (nalltask+64)*sizeof(alltask[0]));
+	if (nalltask % 64 == 0) {
+		alltask = realloc(alltask,
+				  (nalltask + 64) * sizeof(alltask[0]));
 		if (alltask == nil) {
 			fprint(2, "out of memory\n");
 			abort();
@@ -179,7 +180,7 @@ static void
 contextswitch(Context *from, Context *to)
 {
 	if (swapcontext(&from->uc, &to->uc) < 0) {
-		fprint(2, "swapcontext failed: %r\n");
+		fprint(STDERR_FILENO, "swapcontext failed: %r\n");
 		assert(0);
 	}
 }
@@ -195,9 +196,10 @@ taskscheduler(void)
 		}
 		t = taskrunqueue.head;
 		if (t == nil) {
-			fprint(2, "no runnable tasks! %d tasks stalled\n",
+			fprint(STDERR_FILENO,
+			       "no runnable tasks! %d tasks stalled\n",
 			       taskcount);
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 		deltask(&taskrunqueue, t);
 		t->ready = 0;
@@ -268,8 +270,9 @@ needstack(int n)
 	t = taskrunning;
 	if ((char*)&t <= (char*)t->stk ||
 	    (char*)&t - (char*)t->stk < 256 + n) {
-		fprint(2, "task stack overflow: &t=%p tstk=%p n=%d\n", &t,
-		       t->stk, 256+n);
+		fprint(STDERR_FILENO,
+		       "task stack overflow: &t=%p tstk=%p n=%d\n",
+		       &t, t->stk, 256 + n);
 		abort();
 	}
 }
@@ -281,7 +284,7 @@ taskinfo(TASK_UNUSED int s)
 	Task *t;
 	char *extra;
 	fprint(2, "task list:\n");
-	for (i=0; i<nalltask; i++) {
+	for (i = 0; i < nalltask; ++i) {
 		t = alltask[i];
 		if (t == taskrunning) {
 			extra = " (running)";
@@ -290,7 +293,7 @@ taskinfo(TASK_UNUSED int s)
 		} else {
 			extra = "";
 		}
-		fprint(2, "%6d%c %-20s %s%s\n",
+		fprint(STDERR_FILENO, "%6d%c %-20s %s%s\n",
 		       t->id, t->system ? 's' : ' ',
 		       t->name, t->state, extra);
 	}
@@ -329,9 +332,9 @@ main(int argc, char **argv)
 	}
 	taskcreate(taskmainstart, nil, mainstacksize);
 	taskscheduler();
-	fprint(2, "taskscheduler returned in main!\n");
+	fprint(STDERR_FILENO, "taskscheduler returned in main!\n");
 	abort();
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 /*

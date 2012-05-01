@@ -58,7 +58,7 @@ netannounce(int istcp, char *server, int port)
 		n = 1;
 		setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *)&n, sizeof n);
 	}
-	if (bind(fd, (struct sockaddr*)&sa, sizeof sa) < 0) {
+	if (bind(fd, (struct sockaddr *)&sa, sizeof sa) < 0) {
 		taskstate("bind failed");
 		close(fd);
 		return -1;
@@ -99,7 +99,9 @@ netaccept(int fd, char *server, int *port)
 	return cfd;
 }
 
-#define CLASS(p) ((*(unsigned char*)(p))>>6)
+#define CLASS(p) \
+	((*(unsigned char*)(p))>>6)
+
 static int
 parseip(char *name, uint32_t *ip)
 {
@@ -110,7 +112,7 @@ parseip(char *name, uint32_t *ip)
 	char *p;
 	int i, x;
 	p = name;
-	for(i=0; i<4 && *p; i++){
+	for (i = 0; i < 4 && *p; ++i){
 		x = strtoul(p, &p, 0);
 		if (x < 0 || x >= 256) {
 			return -1;
@@ -196,7 +198,7 @@ netdial(int istcp, char *server, int port)
 	memmove(&sa.sin_addr, &ip, 4);
 	sa.sin_family = AF_INET;
 	sa.sin_port = htons(port);
-	if (connect(fd, (struct sockaddr*)&sa, sizeof sa) < 0 &&
+	if (connect(fd, (struct sockaddr *)&sa, sizeof sa) < 0 &&
 	    errno != EINPROGRESS) {
 		taskstate("connect failed");
 		close(fd);
@@ -205,13 +207,13 @@ netdial(int istcp, char *server, int port)
 	/* wait for finish */
 	fdwait(fd, 'w');
 	sn = sizeof sa;
-	if (getpeername(fd, (struct sockaddr*)&sa, &sn) >= 0) {
+	if (getpeername(fd, (struct sockaddr *)&sa, &sn) >= 0) {
 		taskstate("connect succeeded");
 		return fd;
 	}
 	/* report error */
 	sn = sizeof n;
-	getsockopt(fd, SOL_SOCKET, SO_ERROR, (void*)&n, &sn);
+	getsockopt(fd, SOL_SOCKET, SO_ERROR, (void *)&n, &sn);
 	if (n == 0) {
 		n = ECONNREFUSED;
 	}

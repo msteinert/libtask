@@ -70,7 +70,7 @@ fdtask(TASK_UNUSED void *v)
 			if (errno == EINTR) {
 				continue;
 			}
-			fprint(2, "poll: %s\n", strerror(errno));
+			fprint(STDERR_FILENO, "poll: %s\n", strerror(errno));
 			taskexitall(0);
 		}
 		/* wake up the guys who deserve it */
@@ -83,7 +83,7 @@ fdtask(TASK_UNUSED void *v)
 			}
 		}
 		now = nsec();
-		while ((t=sleeping.head) && now >= t->alarmtime) {
+		while ((t = sleeping.head) && now >= t->alarmtime) {
 			deltask(&sleeping, t);
 			if (!t->system && --sleepingcounted == 0) {
 				taskcount--;
@@ -142,7 +142,7 @@ fdwait(int fd, int rw)
 		taskcreate(fdtask, 0, 32768);
 	}
 	if (npollfd >= MAXFD) {
-		fprint(2, "too many poll file descriptors\n");
+		fprint(STDERR_FILENO, "too many poll file descriptors\n");
 		abort();
 	}
 	taskstate("fdwait for %s", rw == 'r' ? "read"

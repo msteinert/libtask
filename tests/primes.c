@@ -22,8 +22,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <task.h>
+#include <unistd.h>
 
 int quiet;
 int goal;
@@ -37,7 +37,7 @@ primetask(void *arg)
 	c = arg;
 	p = chanrecvul(c);
 	if (p > goal) {
-		taskexitall(0);
+		taskexitall(EXIT_SUCCESS);
 	}
 	if (!quiet) {
 		printf("%d\n", p);
@@ -63,7 +63,6 @@ taskmain(int argc, char **argv)
 		goal = 100;
 	}
 	printf("goal=%d\n", goal);
-
 	c = chancreate(sizeof(unsigned long), buffer);
 	taskcreate(primetask, c, 32768);
 	for (i = 2;; i++) {

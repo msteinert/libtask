@@ -56,7 +56,9 @@ fetchtask(TASK_UNUSED void *v)
 			/* do nothing */
 		}
 		close(fd);
-		write(1, ".", 1);
+		if (-1 == write(STDOUT_FILENO, ".", 1)) {
+			return;
+		}
 	}
 }
 
@@ -66,7 +68,7 @@ taskmain(int argc, char **argv)
 	int i, n;
 	if (argc != 4){
 		fprintf(stderr, "usage: httpload n server url\n");
-		taskexitall(1);
+		taskexitall(EXIT_FAILURE);
 	}
 	n = atoi(argv[1]);
 	server = argv[2];

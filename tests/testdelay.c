@@ -47,16 +47,16 @@ taskmain(int argc, char **argv)
 	int i, n;
 	c = chancreate(sizeof(unsigned long), 0);
 	n = 0;
-	for(i = 1; i < argc; i++){
+	for (i = 1; i < argc; ++i) {
 		n++;
 		printf("x");
 		taskcreate(delaytask, (void*)atoi(argv[i]), STACK);
 	}
 
 	/* wait for n tasks to finish */
-	for(i = 0; i < n; i++){
+	for (i = 0; i < n; ++i) {
 		printf("y");
 		chanrecvul(c);
 	}
-	taskexitall(0);
+	taskexitall(EXIT_SUCCESS);
 }

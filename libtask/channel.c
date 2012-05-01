@@ -198,7 +198,7 @@ altcopy(Alt *s, Alt *r)
 	}
 	/* Otherwise it's always okay to receive and then send. */
 	if (r) {
-		cp = c->buf + c->off*c->elemsize;
+		cp = c->buf + c->off * c->elemsize;
 		amove(r->v, cp, c->elemsize);
 		--c->nbuf;
 		if (++c->off == c->bufsize) {
@@ -237,7 +237,6 @@ int
 chanalt(Alt *a)
 {
 	int i, j, ncan, n, canblock;
-	Channel *c;
 	Task *t;
 	needstack(512);
 	for(i = 0; a[i].op != CHANEND && a[i].op != CHANNOBLK; ++i) {
@@ -252,7 +251,6 @@ chanalt(Alt *a)
 	}
 	ncan = 0;
 	for (i = 0; i < n; ++i) {
-		c = a[i].c;
 		if (altcanexec(&a[i])) {
 			ncan++;
 		}
@@ -271,7 +269,7 @@ chanalt(Alt *a)
 	if (!canblock) {
 		return -1;
 	}
-	for (i=0; i<n; i++) {
+	for (i = 0; i < n; ++i) {
 		if(a[i].op != CHANNOP)
 			altqueue(&a[i]);
 	}

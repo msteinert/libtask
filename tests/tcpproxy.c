@@ -88,14 +88,14 @@ taskmain(int argc, char **argv)
 	if (argc != 4){
 		fprintf(stderr,
 			"usage: tcpproxy localport server remoteport\n");
-		taskexitall(1);
+		taskexitall(EXIT_FAILURE);
 	}
 	server = argv[2];
 	port = atoi(argv[3]);
 	if ((fd = netannounce(TCP, 0, atoi(argv[1]))) < 0){
 		fprintf(stderr, "cannot announce on tcp port %d: %s\n",
 			atoi(argv[1]), strerror(errno));
-		taskexitall(1);
+		taskexitall(EXIT_FAILURE);
 	}
 	fdnoblock(fd);
 	while ((cfd = netaccept(fd, remote, &rport)) >= 0){

@@ -50,22 +50,22 @@ printstr(char *dst, char *edst, char *s, int size)
 	if (n < size) {
 		n = size;
 	}
-	if (n >= edst-dst) {
-		n = (edst-dst)-1;
+	if (n >= edst - dst) {
+		n = (edst - dst) - 1;
 	}
 	if (l > n) {
 		l = n;
 	}
 	if (sign < 0) {
 		memmove(dst, s, l);
-		if (n-l) {
-			memset(dst+l, ' ', n-l);
+		if (n - l) {
+			memset(dst + l, ' ', n - l);
 		}
 	} else {
-		if (n-l) {
-			memset(dst, ' ', n-l);
+		if (n - l) {
+			memset(dst, ' ', n - l);
 		}
-		memmove(dst+n-l, s, l);
+		memmove(dst + n - l, s, l);
 	}
 	return dst + n;
 }
@@ -77,7 +77,7 @@ vseprint(char *dst, char *edst, char *fmt, va_list arg)
 	char *p, *w;
 	char cbuf[2];
 	w = dst;
-	for (p = fmt; *p && w < edst - 1; p++) {
+	for (p = fmt; *p && w < edst - 1; ++p) {
 		switch (*p) {
 		default:
 			*w++ = *p;
@@ -86,7 +86,7 @@ vseprint(char *dst, char *edst, char *fmt, va_list arg)
 			fl = 0;
 			size = 0;
 			sign = 1;
-			for (p++; *p; p++) {
+			for (p++; *p; ++p) {
 				switch (*p) {
 				case '-':
 					sign = -1;
@@ -127,7 +127,7 @@ vseprint(char *dst, char *edst, char *fmt, va_list arg)
 					static char digits[] =
 						"0123456789abcdef";
 					char buf[30], *p;
-					int neg, zero;
+					int zero;
 					uvlong luv;
 					if (fl & FlagLongLong) {
 						if (fl & FlagUnsigned) {
@@ -143,7 +143,7 @@ vseprint(char *dst, char *edst, char *fmt, va_list arg)
 								luv = va_arg(arg, long);
 							}
 						} else {
-							if (fl&FlagUnsigned) {
+							if (fl & FlagUnsigned) {
 								luv = va_arg(arg, uint);
 							} else {
 								luv = va_arg(arg, int);
@@ -151,10 +151,8 @@ vseprint(char *dst, char *edst, char *fmt, va_list arg)
 						}
 					}
 					p = buf + sizeof buf;
-					neg = 0;
 					zero = 0;
 					if (!(fl & FlagUnsigned) && (vlong)luv < 0) {
-						neg = 1;
 						luv = -luv;
 					}
 					if (luv == 0) {
@@ -181,7 +179,7 @@ vseprint(char *dst, char *edst, char *fmt, va_list arg)
 					w = printstr(w, edst, cbuf, size * sign);
 					goto break2;
 				case 's':
-					w = printstr(w, edst, va_arg(arg, char*), size * sign);
+					w = printstr(w, edst, va_arg(arg, char *), size * sign);
 					goto break2;
 				case 'r':
 					w = printstr(w, edst, strerror(errno), size * sign);
