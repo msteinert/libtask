@@ -20,18 +20,15 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include <stdio.h>
-#include <string.h>
 #include <errno.h>
-#include <unistd.h>
-#include <task.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
+#include <task.h>
+#include <unistd.h>
 
-enum {
-	STACK = 32768
-};
-
+const int STACK = 32768;
 char *server;
 int port;
 
@@ -70,7 +67,7 @@ proxytask(void *v)
 {
 	int fd, remotefd;
 	fd = (int)v;
-	if((remotefd = netdial(TCP, server, port)) < 0){
+	if((remotefd = netdial(TCP, server, port)) < 0) {
 		close(fd);
 		return;
 	}
@@ -92,13 +89,13 @@ taskmain(int argc, char **argv)
 	}
 	server = argv[2];
 	port = atoi(argv[3]);
-	if ((fd = netannounce(TCP, 0, atoi(argv[1]))) < 0){
+	if ((fd = netannounce(TCP, 0, atoi(argv[1]))) < 0) {
 		fprintf(stderr, "cannot announce on tcp port %d: %s\n",
 			atoi(argv[1]), strerror(errno));
 		taskexitall(EXIT_FAILURE);
 	}
 	fdnoblock(fd);
-	while ((cfd = netaccept(fd, remote, &rport)) >= 0){
+	while ((cfd = netaccept(fd, remote, &rport)) >= 0) {
 		fprintf(stderr, "connection from %s:%d\n", remote, rport);
 		taskcreate(proxytask, (void*)cfd, STACK);
 	}

@@ -20,45 +20,44 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include <stdio.h>
-#include <string.h>
 #include <errno.h>
-#include <unistd.h>
-#include <task.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <task.h>
 #include "taskimpl.h"
 
-enum {
-	HTTP_STACK = 32768
-};
-
+const int HTTP_STACK = 32768;
 char *server;
 char *url;
 
 void
 fetchtask(TASK_UNUSED void *v)
 {
-	int fd, n;
 	char buf[512];
-	fprintf(stderr, "starting...\n");
+	int fd, n, i = 0;
+	snprintf(buf, sizeof buf,
+		 "GET %s HTTP/1.0\r\n"
+		 "Host: %s\r\n\r\n",
+		 url, server);
+	fprintf(stdout, "%s %s\n", server, url);
 	for (;;) {
 		if ((fd = netdial(TCP, server, 80)) < 0) {
 			fprintf(stderr, "dial %s: %s (%s)\n", server,
 				strerror(errno), taskgetstate());
 			continue;
 		}
-		snprintf(buf, sizeof buf,
-			 "GET %s HTTP/1.0\r\n"
-			 "Host: %s\r\n\r\n",
-			 url, server);
 		fdwrite(fd, buf, strlen(buf));
 		while ((n = fdread(fd, buf, sizeof buf)) > 0) {
-			/* do nothing */
+			i += n;
+			if (1024 <= i) {
+				if (0 > write(STDOUT_FILENO, ".", 1)) {
+					taskexitall(EXIT_FAILURE);
+				}
+				i -= 1024;
+			}
 		}
 		close(fd);
-		if (-1 == write(STDOUT_FILENO, ".", 1)) {
-			return;
-		}
 	}
 }
 
@@ -78,6 +77,5 @@ taskmain(int argc, char **argv)
 		while (taskyield() > 1) {
 			/* do nothing */
 		}
-		sleep(1);
 	}
 }

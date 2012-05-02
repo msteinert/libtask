@@ -23,11 +23,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <task.h>
-#include <unistd.h>
 
-int quiet;
-int goal;
 int buffer;
+int goal = 100;
 
 void
 primetask(void *arg)
@@ -39,9 +37,7 @@ primetask(void *arg)
 	if (p > goal) {
 		taskexitall(EXIT_SUCCESS);
 	}
-	if (!quiet) {
-		printf("%d\n", p);
-	}
+	printf("%d\n", p);
 	nc = chancreate(sizeof(unsigned long), buffer);
 	taskcreate(primetask, nc, 32768);
 	for (;;) {
@@ -59,8 +55,6 @@ taskmain(int argc, char **argv)
 	Channel *c;
 	if (argc > 1) {
 		goal = atoi(argv[1]);
-	} else {
-		goal = 100;
 	}
 	printf("goal=%d\n", goal);
 	c = chancreate(sizeof(unsigned long), buffer);
@@ -68,16 +62,4 @@ taskmain(int argc, char **argv)
 	for (i = 2;; i++) {
 		chansendul(c, i);
 	}
-}
-
-void *
-emalloc(unsigned long n)
-{
-	return calloc(n ,1);
-}
-
-long
-lrand(void)
-{
-	return rand();
 }
