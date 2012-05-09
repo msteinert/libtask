@@ -17,9 +17,9 @@ m4_define([interface_age], [0])
 
 # Initialize autoconf & automake
 AC_INIT([Libtask], [major_version.minor_version.micro_version],
-    [https://github.com/msteinert/libtask/issues], [libtask])
+	[https://github.com/msteinert/libtask/issues], [libtask])
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE([1.9 foreign -Wno-portability])
+AM_INIT_AUTOMAKE([1.9 subdir-objects foreign -Wno-portability])
 AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([libtask/task.h])
 
@@ -47,10 +47,8 @@ AC_SUBST([LT_AGE])
 # Output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
-	libtask/Makefile
 	libtask.pc
 	Makefile
-	tests/Makefile
 ])
 AC_OUTPUT
 
